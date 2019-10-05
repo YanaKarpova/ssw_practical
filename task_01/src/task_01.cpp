@@ -83,21 +83,23 @@ TListElem* AddInfoToList(std::string info, std::string Type, TListElem* pList) /
 	return pElem;
 }
 
-void DeleteList(TListElem* pList) // удаление списка
+void DeleteList(TListElem* &pList) // удаление списка
 {
 	TListElem* pNext;
 	TListElem* pElem = pList;
 
-	while (pElem != NULL)
+	while (pElem != nullptr)   
 	{
 		pNext = pElem->Link;
 		delete pElem;
+		pElem = nullptr;
 		pElem = pNext;
 	}
 
 }
 
-int SearchList(TListElem* pList, std::string id) // поиск элемента в списке 
+
+bool SearchList(TListElem* pList, std::string id) // поиск элемента в списке 
 {
 	TListElem* pElem = pList;
 	while (pElem != NULL)
@@ -134,28 +136,46 @@ void synt_t::codeclose()
 {
 	code.close();
 }
+// функции вывода ошибки
+void Error(std::string Type)
+{
+	std::cout << " Type error: " << Type << std::endl;
+}
+void Error(int str_n , lexem lexema, std::string Type)
+{
+	std::cout << " Error in line number " << str_n << std::endl 
+		<< "In lexema: " << lexema.first << std::endl 
+		<< "Type error: " << Type << std::endl;
+}
+
+void Error(int str_n, char ch, std::string Type)
+{
+	std::cout << " Error in line number " << str_n << std::endl
+		<< "In lexema: " << ch << std::endl
+		<< "Type error: " << Type << std::endl;
+}
 
 struct var // структура для работы с переменными
 {
-	TListElem* VAR = NULL;
-	int FindVAR(std::string id); // поиск переменной
-	void InsertVAR(std::string id, std::string Type); // вставка переменной
+	TListElem* Variable = NULL;
+	int Check_presence_var(std::string id); // проверка наличия переменной
+	void Insert_var(std::string id, std::string Type); // вставка переменной
 	void Delete();  // удаление
 
-}Table_VAR;
+}Table_variable;
 
-int var::FindVAR(std::string id)
+int var::Check_presence_var(std::string id)
 {
-	return SearchList(VAR, id);
+	return SearchList(Variable, id);
 }
-void var::InsertVAR(std::string id, std::string Type)
+void var::Insert_var(std::string id, std::string Type)
 {
-	VAR = AddInfoToList(id, Type, VAR);
+	Variable = AddInfoToList(id, Type, Variable);
 }
 
 void var::Delete()
 {
-	DeleteList(VAR);
+	DeleteList(Variable);
 }
 
 /**
@@ -167,14 +187,14 @@ void var::Delete()
  */
 char synt_t::getChar() {
     if (codefail()) {
-        std::cerr << "<E> Can't read from the file" << std::endl;
+       Error("Can't read from the file");
         throw std::runtime_error("File doesn't available");
     }
 
     if (!codeeof()) {
         code >> std::noskipws >> cursor;
     } else {
-        std::cerr << "<E> File is EOF early" << std::endl;
+        Error("File is EOF early");
         throw std::runtime_error("File is EOF early");
     }
 
@@ -277,11 +297,11 @@ lexem synt_t::GetLex() {
                 case ';' : tok = semi_tk;  break;
                 case '=' : tok = eqv_tk;   break;
                 case '+': tok = add_tk;   break;
-			    case '-': tok = sub_tk;   break;
-			    case '*': tok = mul_tk;   break;
-			    case '/': tok = div_tk;   break;
+                case '-': tok = sub_tk;   break;
+                case '*': tok = mul_tk;   break;
+                case '/': tok = div_tk;   break;
                 default:
-                    std::cerr << "<E> Unknown token " << ch << " in the  line  " << nline() << std::endl; break;
+                   Error(nline(), ch, "Unknown token ");
             }
             lex += ch;
 
@@ -296,7 +316,7 @@ lexem synt_t::GetLex() {
             getChar(); // some kind of k o s t y l; here we look on \n
             return std::make_pair(lex, tok);
         } else {
-            std::cerr << "<E> Unknown token " << ch  << " in the line  " << nline() << std::endl;
+            Error(nline(), ch, "Unknown token ");
         }
 
         return std::make_pair("", unknown_tk);
@@ -326,7 +346,7 @@ lexem synt_t::PeekLex(int n) {
 
         return res;
     } catch (const std::exception &exp) {
-        std::cerr << "<E> You try to peek too much forward, get back" << std::endl;
+       Error("You try to peek too much forward, get back");
         code.seekg(curr_pos, code.beg);
         cursor = curr_curs;
 
@@ -389,7 +409,7 @@ int expressionParse(lexem lex, synt_t &parser) {
 		break;
         }
         default: {
-            std::cerr << "<E> Must be identificator or constant or '-' or '('"<< " in the line " << parser.nline()
+           Error(parser.nline(), lex, "Must be identificator or constant or '-' or '('");
                       << std::endl;
             return -EXIT_FAILURE;
         }
@@ -407,50 +427,50 @@ int expressionParse(lexem lex, synt_t &parser) {
  * @return  EXIT_SUCCESS - if state part is matched to grammar
  * @return -EXIT_FAILURE - if state part doesn't matched to grammar
  */
-int stateParse(lexem &lex, synt_t &parser) {
-    lex = parser.GetLex();
-    switch(lex.second) {
-        case id_tk: { // a := b (assign part)
-            /**
-             * TODO: Here you have to check existence of variable
-             */
-            if (Table_VAR.FindVAR(lex.first) != 1)
-		     {
-			std::cerr << "<E> indificator is absent  in the line " << parser.nline() << std::endl;
+int stateParse(lexem& lex, synt_t& parser) {
+	lex = parser.GetLex();
+	switch (lex.second) {
+	case id_tk: { // a := b (assign part)
+				  /**
+				  * TODO: Here you have to check existence of variable // проверить наличие переменной
+				  */
+		if (Table_variable.Check_presence_var(lex.first) != 1 )
+		{
+			Error(parser.nline(), lex, " indificator is absent  in the line");
 			return -EXIT_FAILURE;
-		     }
+		}
 
-            lex = parser.GetLex();
-            if (lex.second != ass_tk) {
-                std::cerr << "<E> := is absent" << " in the line " << parser.nline() <<  << std::endl;
-                return -EXIT_FAILURE;
-            }
+		lex = parser.GetLex();
+		if (lex.second != ass_tk) {
+			Error(parser.nline(), lex, " := is absent");
+			return -EXIT_FAILURE;
+		}
 
-            expressionParse(lex, parser);
+		expressionParse(lex, parser);
 
-            lex = parser.GetLex();
-            if (lex.second != semi_tk) {
-                std::cerr << "<E> ; is absent" << " in the line " << parser.nline() <<  << std::endl;
-                return -EXIT_FAILURE;
-            }
-            break;
-        }
-        case begin_tk: { // compound statements
-            compoundParse(lex, parser);
-            lex = parser.GetLex();
-            if (lex.second != semi_tk) {
-                std::cerr << "<E> ';' is absent" << " in the line " << parser.nline() <<  << std::endl;
-                return -EXIT_FAILURE;
-            }
-            break;
-        }
-        default: {
+		lex = parser.GetLex();
+		if (lex.second != semi_tk) {
+			Error(parser.nline(), lex, " ; is absent");
+			return -EXIT_FAILURE;
+		}
+		break;
+	}
+	case begin_tk: { // compound statements
+		compoundParse(lex, parser);
+		lex = parser.GetLex();
+		if (lex.second != semi_tk) {
+			Error(parser.nline(), lex, " ; is absent");
+			return -EXIT_FAILURE;
+		}
+		break;
+	}
+	default: {
 
-            break;
-        }
-    }
+		break;
+	}
+	}
 
-    return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
 
 
@@ -462,28 +482,26 @@ int stateParse(lexem &lex, synt_t &parser) {
  * @return  EXIT_SUCCESS - if compound part is matched to grammar
  * @return -EXIT_FAILURE - if compound part doesn't matched to grammar
  */
-int compoundParse(lexem lex, synt_t &parser) {
-    static int compound_count = 0;
-    compound_count++;
-    while (lex.second != end_tk) {
-        buildTreeStub(lex); // Here is your Tree realization
-        if (parser.codeeof()) {
-            std::cerr << "<E> Each begin must be closed by 'end'" << std::endl;
-            return -EXIT_FAILURE;
-        }
-        stateParse(lex, parser);
-    }
+int compoundParse(lexem lex, synt_t& parser) {
+	static int compound_count = 0;
+	compound_count++;
+	while (lex.second != end_tk) {
+		buildTreeStub(lex); // Here is your Tree realization
+		if (parser.codeeof()) {
+			Error(parser.nline(), lex, "Each begin must be closed by 'end'");
+			return -EXIT_FAILURE;
+		}
+		stateParse(lex, parser);
+	}
 
-    if (compound_count == 1) {
-        if (parser.PeekLex(1).second == unknown_tk) {
-            std::cerr << "<E> '.' is absent" << "in the line " << parser.nline()  << std::endl;
-            return -EXIT_FAILURE;
-        }
-    }
-
-    return EXIT_SUCCESS;
+	if (compound_count == 1) {
+		if (parser.PeekLex(1).second == unknown_tk) {
+			Error(parser.nline(), lex, "'.' is absent");
+			return -EXIT_FAILURE;
+		}
+	}
+	return EXIT_SUCCESS;
 }
-
 
 /**
  * @brief Parse variable declaration part
@@ -492,37 +510,40 @@ int compoundParse(lexem lex, synt_t &parser) {
  *
  * @return lexem - last parsed lexem (will actually return ':')
  */
-lexem vardParse(lexem lex, synt_t &parser) {
-    lex = parser.GetLex();
-    if (lex.second != id_tk) {
-        std::cerr << "<E> Here must be identificator" << "in the line " << parser.nline()  << std::endl;
-        return lex;
-    }
-
-    /**
-     *  TODO: Here save list of identificators
-     */
-    int l = 0;
+lexem vardParse(lexem lex, synt_t& parser) {
+	lex = parser.GetLex();
+	if (lex.second != id_tk) {
+		Error(parser.nline(), lex, "Here must be identificator");
+		return lex;
+	}
+	//-----------------------------------------------------------------------------------------------------------------------	
+	int l = 0;
 	lexem type;
-	if (Table_VAR.FindVAR(lex.first) != 1)
+	if (Table_variable.Check_presence_var(lex.first) != 1)
 	{
 		do
 		{
 			l = l + 1; //l++
 			type = parser.PeekLex(l + 1);
 			if (type.second == type_tk)
-				Table_VAR.InsertVAR(lex.first, type.first);
+				Table_variable.Insert_var(lex.first, type.first);
 		} while (type.second != semi_tk && type.second != type_tk);
 	}
 	else
-		std::cerr << "<E>  This indicator is already there " << "in the line " << parser.nline() << std::endl;
-    lex = parser.GetLex();
-    if (lex.second == comma_tk)
-        return vardParse(lex, parser); // Раскручивая стек обратно,
-                                       // будет возвращено последнее значение
+		Error(parser.nline(), lex, " This indicator is already there");
+	//-----------------------------------------------------------------------------
+		/**
+		*  TODO: Here save list of identificators
+		*/
 
-    return lex;
+	lex = parser.GetLex();
+	if (lex.second == comma_tk)
+		return vardParse(lex, parser); // Раскручивая стек обратно,
+									   // будет возвращено последнее значение
+
+	return lex;
 }
+
 
 
 /**
@@ -533,45 +554,46 @@ lexem vardParse(lexem lex, synt_t &parser) {
  * @return  EXIT_SUCCESS - if block part is matched to grammar
  * @return -EXIT_FAILURE - if block part doesn't matched to grammar
  */
-int blockParse(lexem lex, synt_t &parser) {
-    lex = parser.GetLex();
-    switch(lex.second) { // var / begin
-        case var_tk: {   // var a, b: integer;
-            lex = vardParse(lex, parser);
-            if (lex.second != ddt_tk)
-                std::cerr << "<E> : is absent"  << "in the line " << parser.nline()<< std::endl;
+int blockParse(lexem lex, synt_t& parser) {
+	lex = parser.GetLex();
+	switch (lex.second) { // var / begin
+	case var_tk: {   // var a, b: integer;
+		lex = vardParse(lex, parser);
+		if (lex.second != ddt_tk)
+			Error(parser.nline(), lex, " : is absent");
 
-            lex = parser.GetLex();
-            if (lex.second != type_tk)
-                std::cerr << "<E> Identificator must have type" << "in the line " << parser.nline() << std::endl;
+		lex = parser.GetLex();
+		if (lex.second != type_tk)
+			Error(parser.nline(), lex, " Identificator must have type");
 
-            lex = parser.GetLex();
-            if (lex.second != semi_tk) {
-                std::cerr << "<E> ; is absent" << "in the line " << parser.nline()  << std::endl;
-                return -EXIT_FAILURE;
-            }
+		lex = parser.GetLex();
+		if (lex.second != semi_tk) {
+			Error(parser.nline(), lex, " ; is absent");
+			return -EXIT_FAILURE;
+		}
 
-            buildTreeStub(lex); // Here is your Tree realization
+		buildTreeStub(lex); // Here is your Tree realization
 
-            break;
-        }
-        case begin_tk: {
-            compoundParse(lex, parser);
-            break;
-        }
-        case dot_tk: {
-            std::cout << "Program was parse successfully" << std::endl;
-            Table_VAR.Delete();
-            return 1;
-        }
-        default: {
-            std::cerr << "<E> Unknown lexem" << "in the line " << parser.nline()  << std::endl;
-            return -EXIT_FAILURE;
-        }
-    }
+		break;
+	}
+	case begin_tk: {
+		compoundParse(lex, parser);
+		break;
+	}
+	case dot_tk: {
+		std::cout << "Program was parse successfully" << std::endl;
+		Table_variable.Delete();
+		return 1;
+	}
+	default: {
+		Error(parser.nline(), lex, " Unknown lexemt");
+		return -EXIT_FAILURE;
+	}
+	}
 
-    return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
+
 
 
 /**
@@ -582,29 +604,30 @@ int blockParse(lexem lex, synt_t &parser) {
  * @return -EXIT_FAILURE - if input program part is incorrect
  * @note Wait input like: program <id_tk> ;
  */
-int programParse(synt_t &parser) {
-    auto lex = parser.GetLex();
-    if (lex.second == program_tk) {
-        lex = parser.GetLex();
-        if (lex.second != id_tk) {
-            std::cerr << "<E> Name of program is absent" << std::endl;
-            if (lex.second != semi_tk) {
-                std::cerr << "<E> ; is absent" << "in the line " << parser.nline() << std::endl;
-                return -EXIT_FAILURE;
-            }
-        }
+int programParse(synt_t& parser) {
+	auto lex = parser.GetLex();
+	if (lex.second == program_tk) {
+		lex = parser.GetLex();
+		if (lex.second != id_tk) {
+			Error(parser.nline(), lex, " Name of program is absent");
+			if (lex.second != semi_tk) {
+				Error(parser.nline(), lex, " ; is absent");
+				return -EXIT_FAILURE;
+			}
+		}
 
-        lex = parser.GetLex();
-        if (lex.second != semi_tk) {
-            std::cerr << "<E> ; is absent" << "in the line " << parser.nline() << std::endl;
-            return -EXIT_FAILURE;
-        }
+		lex = parser.GetLex();
+		if (lex.second != semi_tk) {
+			Error(parser.nline(), lex, " ; is absent");
+			return -EXIT_FAILURE;
+		}
 
-        return EXIT_SUCCESS;
-    } else {
-        std::cerr << "<E> Undefined type of program" <<  "in the line " << parser.nline() << std::endl;
-        return -EXIT_FAILURE;
-    }
+		return EXIT_SUCCESS;
+	}
+	else {
+		Error(parser.nline(), lex, "Undefined type of program");
+		return -EXIT_FAILURE;
+	}
 }
 
 
@@ -615,36 +638,39 @@ int programParse(synt_t &parser) {
  * @return  EXIT_SUCCESS - if file was successful parsed
  * @return -EXIT_FAILURE - if can't parse incoming file
  */
-int Parse2(const std::string &file_path) {
-    try {
-        synt_t example_synt;
+int Parse2(const std::string& file_path) {
+	try {
+		synt_t example_synt;
 
-        example_synt.codeopen(file_path);
-        if (!example_synt.codeisopen()) {
-            std::cerr << "<E> Can't open file" << std::endl;
-            return -EXIT_FAILURE;
-        }
+		example_synt.codeopen(file_path);
+		if (!example_synt.codeisopen()) {
 
-        if (programParse(example_synt) != 0) {
-            example_synt.codeclose();
-            Table_VAR.Delete();
-            return -EXIT_FAILURE;
-        }
+			Error("Can't open file");
+			return -EXIT_FAILURE;
+		}
 
-        lexem lex;
-        while (!example_synt.codeeof() && !example_synt.codefail()) {
-            if (blockParse(lex, example_synt) == 1)
-                break;
-        }
+		if (programParse(example_synt) != 0) {
+			example_synt.codeclose();
+			Table_variable.Delete();
+			return -EXIT_FAILURE;
+		}
 
-        example_synt.codeclose();
-        return EXIT_SUCCESS;
-    } catch (const std::exception &exp) {
-        std::cerr << "<E> Catch exception in " << __func__ << ": " << exp.what()
-                  << std::endl;
-        return -EXIT_FAILURE;
-    }
+		lexem lex;
+		while (!example_synt.codeeof() && !example_synt.codefail()) {
+			if (blockParse(lex, example_synt) == 1)
+				break;
+		}
+
+		example_synt.codeclose();
+		return EXIT_SUCCESS;
+	}
+	catch (const std::exception & exp) {
+		std::cerr << "<E> Catch exception in " << __func__ << ": " << exp.what()
+			<< std::endl;
+		return -EXIT_FAILURE;
+	}
 }
+
 
 
 /**
