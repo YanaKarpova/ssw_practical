@@ -9,6 +9,8 @@
 #include <iostream>
 #include <vector>
 #include "Lexem.h"
+#include "Error.h"
+
 
 
 class Lexer {
