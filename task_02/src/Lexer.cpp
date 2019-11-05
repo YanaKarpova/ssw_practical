@@ -1,7 +1,8 @@
+ 
 #include "Lexer.h"
 
-
-Lexer::Lexer(const char *file_path) {
+Lexer::Lexer(const char *file_path) 
+{
     try {
         code.open(file_path);
     } catch (const std::exception &exp) {
@@ -14,21 +15,24 @@ Lexer::Lexer(const char *file_path) {
 }
 
 
-Lexer::~Lexer() {
+Lexer::~Lexer() 
+{
     code.close();
 }
 
 
 /**
- * @brief Scan code and build table of lexemes
+ * @brief Scan code and build table of lexemes 
  * @param[in] file_path - path to the file with code
  *
  * @return table of lexeme
  */
-std::vector<Lexem> Lexer::ScanCode() {
+std::vector<Lexem> Lexer::ScanCode() 
+{
     try {
         if (!code.is_open()) {
-            std::cerr << "<E> Can't open file" << std::endl;
+			Error.printError2(FILE_OPEN_ERR);
+            //std::cerr << "<E> Can't open file" << std::endl; 
             return lex_table;
         }
 
@@ -50,13 +54,14 @@ std::vector<Lexem> Lexer::ScanCode() {
  *
  * @return lexeme
  */
-Lexem Lexer::getLex() {
+Lexem Lexer::getLex() 
+{
     try {
         auto ch = getCurrentCurs();
         while (ch == -1 || ch == ' ' || ch == '\r' || ch == '\n' || ch == '\t') {
             if (ch == '\n') line++;
 
-            if (code.eof()) // if end of files
+            if (code.eof())
                 return Lexem("EOF", eof_tk, line);
             ch = getChar();
         }
@@ -87,12 +92,14 @@ Lexem Lexer::getLex() {
             else if (lex == "begin")   { return Lexem(std::move(lex), begin_tk, line);   }
             else if (lex == "integer") { return Lexem(std::move(lex), type_tk, line);    }
             else if (lex == "end")     { return Lexem(std::move(lex), end_tk, line);     }
+			else if (lex == "div") { return Lexem(std::move(lex), div_tk, line); }
             else { // it is ID
                 return Lexem(std::move(lex), id_tk, line);
             }
         } else if (std::ispunct(static_cast<unsigned char>(ch))) { // Other symbols
             tokens tok;
-            switch (ch) {
+            switch (ch)
+			{
                 case ',' : tok = comma_tk; break;
                 case '.' : tok = dot_tk;   break;
                 case ':' : tok = ddt_tk;   break;
@@ -101,9 +108,12 @@ Lexem Lexer::getLex() {
                 case '+' : tok = add_tk;   break;
                 case '-' : tok = sub_tk;   break;
                 case '*' : tok = mul_tk;   break;
-                case '/' : tok = div_tk;   break; // TODO: rewrite for Pascal div
+              //case '/' : tok = div_tk;   break;
+				case '(': tok = opb_tk;    break;
+				case ')': tok = cpb_tk;    break;
                 default: {
-                    std::cerr << "<E> Unknown token " << ch << std::endl;
+					Error.printError2(UNKNOWN_TK);
+                    //std::cerr << "<E> Unknown token " << ch << std::endl;
                     tok = unknown_tk;
                     break;
                 }
@@ -122,7 +132,8 @@ Lexem Lexer::getLex() {
             getChar(); // some kind of k o s t y l; here we look on \n
             return Lexem(std::move(lex), tok, line);
         } else {
-            std::cerr << "<E> Unknown token " << ch << std::endl;
+			Error.printError2(UNKNOWN_TK);
+           // std::cerr << "<E> Unknown token " << ch << std::endl;
         }
 
         return Lexem("", unknown_tk, line);
@@ -138,18 +149,24 @@ Lexem Lexer::getLex() {
  *
  * @return next character
  */
-char Lexer::getChar() {
+char Lexer::getChar() 
+{
     if (code.fail()) {
-        std::cerr << "<E> Can't read from the file" << std::endl;
+		Error.printError2(FILE_FIlE_ERR);
+        /*std::cerr << "<E> Can't read from the file" << std::endl;
         throw std::runtime_error("File doesn't available");
+		*/
     }
 
     if (!code.eof()) {
         code >> std::noskipws >> cursor;
     } else {
-        std::cerr << "<E> File is EOF early" << std::endl;
+		Error.printError2(EOF_ERR);
+        /*std::cerr << "<E> File is EOF early" << std::endl;
         throw std::runtime_error("File is EOF early");
+		*/
     }
 
     return cursor;
 }
+
