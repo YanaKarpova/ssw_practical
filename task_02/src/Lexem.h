@@ -37,17 +37,17 @@ enum tokens
 
 enum errors 
 {
-      UNKNOWN_LEXEM,   // Unknown lexeme  // неизвестная лексема
-      EOF_ERR,         // End of file error  // ошибка конец файла или достигнут конец файла
-      MUST_BE_ID,      //  ADD_ERR,  // Error: Must be '+ //   ошибка должен быть идентификатор
-      MUST_BE_SEMI,    // Error: Must be ';' // ошибка должна быть;
+      UNKNOWN_LEXEM,   // Unknown lexeme
+      EOF_ERR,         // End of file error 
+      MUST_BE_ID,      // Error: Must be identifier
+      MUST_BE_SEMI,    // Error: Must be ';'
       MUST_BE_PROG,    // Error: Must be 'program'
       MUST_BE_COMMA,   // Error: Must be ','
-      MUST_BE_TYPE,    // Error: Must be type of identifier // ошибка должен быть тип идентификатора
+      MUST_BE_TYPE,    // Error: Must be type of identifier 
       MUST_BE_DOT,     // Error: Must be '.'
       MUST_BE_ASS,     // Error: Must be ':='
-      DUPL_ID_ERR,     // Error: Duplicate declaration on identifier  // повтрение обьвления идентификатора
-      UNKNOWN_ID,      // Error: Undefined identifier // неопределенный идентификатор
+      DUPL_ID_ERR,     // Error: Duplicate declaration on identifier
+      UNKNOWN_ID,      // Error: Undefined identifier
       MUST_BE_VAR,  // Error: Must be 'var'
 	  MUST_BE_BIGIN,  // Error: Must be 'begin'
 	  MUST_BE_END,  // Error: Must be 'end'
