@@ -20,6 +20,7 @@ public:
 
     ~Lexer();
 private:
+    Errors Error;
     std::ifstream      code;
     char               cursor  { -1 };
     int                line    { 1 };
