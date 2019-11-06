@@ -12,7 +12,7 @@
 #include <map>
 #include <vector>
 #include "Lexem.h"
-#include "Lexer.h"
+#include "Error.h"
 #include "Tree.h"
 #include "Variable.h"
 
@@ -34,7 +34,8 @@ private:
 
     lex_it getNextLex(lex_it &iter);
     lex_it peekLex(int N, lex_it t_iter);
-	void buildVarTree(const std::list<std::string>& t_var_list, Tree* t_tree, std::map<std::string, Variable> id_map);
+    void buildVarTree(const std::list<std::string>& t_var_list, Tree* t_tree, std::map<std::string, Variable> id_map);
+    void buildTreeExpression(Tree* t_tree, std::string x);
     int   expressionParse            (lex_it &t_iter, std::string& x);
     int   stateParse                 (lex_it &t_iter, Tree* t_tree);
     int   compoundParse              (lex_it &t_iter, Tree* t_tree);
