@@ -149,7 +149,7 @@ void Errors :: printError(errors t_err, Lexem lex)  // error information output
 }
 
 
-	void Errors::printError2(errors t_err) // error information output
+	void Errors::printError(errors t_err) // error information output
 	{ 
 		switch (t_err) 
 		{
