@@ -7,6 +7,7 @@ Tree::Tree()
 	left_node = nullptr;
 	right_node = nullptr;
 	 parent_node = nullptr;
+	std::string value { "" };
 }
 void Tree::printTree(Tree* tree)
 {
