@@ -36,10 +36,10 @@
 Syntax::Syntax(std::vector<Lexem>&& t_lex_table) 
 { 
 	if (t_lex_table.empty())
-		Error.printError2(LEX_TABLE_ERR);
+		Error.printError(LEX_TABLE_ERR);
 	//throw std::runtime_error("<E> Syntax: Lexemes table is empty");
 	if (t_lex_table.at(0).GetToken() == eof_tk) 
-		Error.printError2(FILE_EMPTY_ERR);
+		Error.printError(FILE_EMPTY_ERR);
 	//throw std::runtime_error("<E> Syntax: Code file is empty");
 	lex_table = t_lex_table;
 	cursor = lex_table.begin();
