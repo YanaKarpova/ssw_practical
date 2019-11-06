@@ -312,9 +312,14 @@ int Syntax::stateParse(lex_it& t_iter, Tree* t_tree) {
 			return -EXIT_FAILURE;
 		}
 		t_tree = t_tree->left_node;
-		t_tree =pascal_tree->buildTreeStub(t_tree, ":=") ;
-		t_tree->left_node = pascal_tree->buildTreeStub(t_tree, iter->GetName());
-		expressionParse(t_iter, x);
+		t_tree =t_tree->buildTreeStub(t_tree, ":=") ;
+		t_tree->left_node = t_tree->buildTreeStub(t_tree, iter->GetName());
+		if (expressionParse(t_iter, x) == 0)
+		   if (!x.empty())
+		      {
+			buildTreeExpression(t_tree, x);
+		       }
+		//expressionParse(t_iter, x);
 		if (!checkLexem(t_iter, semi_tk)) { // we exit from expression on the ';'
 			Error.printError(MUST_BE_SEMI, *t_iter);
 			return -EXIT_FAILURE;
@@ -322,7 +327,7 @@ int Syntax::stateParse(lex_it& t_iter, Tree* t_tree) {
 		break;
 	}
 	case begin_tk: {
-		t_tree->left_node = pascal_tree->buildTreeStub(t_tree, "begin") ;
+		t_tree->left_node = t_tree->buildTreeStub(t_tree, "begin") ;
 		compoundParse(t_iter, t_tree->left_node);
 		getNextLex(t_iter);
 		if (!checkLexem(t_iter, semi_tk)) {
@@ -519,6 +524,120 @@ void Syntax::updateVarTypes(const std::list<std::string>& t_var_list,
 	catch (const std::exception & exp) {
 		std::cerr << "<E> Syntax: Catch exception in " << __func__ << ": "
 			<< exp.what() << std::endl;
+	}
+}
+
+void Syntax::buildVarTree(const std::list<std::string>& t_var_list, Tree* t_tree, std::map<std::string, Variable> id_map)
+{
+	try {
+		auto i = 0;
+		for (auto& el : t_var_list) {
+			Tree* tmp_tree = t_tree->createNode(el);
+			tmp_tree->right_node = t_tree->buildTreeStub(tmp_tree, id_map.at(el).type);
+			t_tree->createVarTree(t_tree, tmp_tree, i++);
+		}
+	}
+	catch (const std::exception & exp) {
+		std::cerr << "<E> Syntax: Catch exception in " << __func__ << ": "
+			<< exp.what() << std::endl;
+	}
+}
+
+void Syntax::buildTreeExpression(Tree* t_tree, std::string x) //Build subtree of arithmetic expressions
+{
+	std::string y = "";
+	int op_count = 0, j = 0,L, l;
+	l = x.length();
+	if (l == 2 && x[0] == '-')
+	{
+		if (t_tree->left_node == nullptr)
+			t_tree->left_node = t_tree->buildTreeStub(t_tree, x);
+		else
+			t_tree->right_node = t_tree->buildTreeStub(t_tree, x);
+	}
+	else
+	{
+		if (l == 1)
+		{
+			if (t_tree->left_node == nullptr)
+				t_tree->left_node = t_tree->buildTreeStub(t_tree, x);
+			else
+				t_tree->right_node = t_tree->buildTreeStub(t_tree, x);
+		}
+		else
+		{
+			std::string y = "";
+			int op_count = 0;
+			int j = 0;
+			int L;
+			for (int i = 0; i < l; i++)
+
+			{
+				if (std::isdigit(x[i]))
+					continue;
+				else
+				{
+					if (x[i] == '+' || x[i] == '-')
+					{
+						if (x[i] == '-' && (i == 0 || x[i - 1] == '+' || x[i - 1] == '*' || x[i - 1] == '/'))
+						{
+							continue;
+						}
+						else
+						{
+							op_count++;
+							y = x[i];
+							j = i;
+							continue;
+						}
+					}
+					if ((x[i] == '*' || x[i] == '/') && y != "+" && y != "-")
+					{
+						op_count++;
+						y = x[i];
+						j = i;
+						continue;
+					}
+					if (x[i] == '(')
+					{
+						while (x[i] != ')')
+							i++;
+					}
+				}
+			}
+			if (t_tree->left_node == nullptr)
+			{
+				t_tree->left_node = t_tree->buildTreeStub(t_tree, y);
+				L = 1;
+			}
+			else
+			{
+				t_tree->right_node = t_tree->buildTreeStub(t_tree, y);
+				L = 0;
+			}
+			y = "";
+			if (x.front() == '(' && x[j - 1] == ')')
+				for (int i = 1; i < j - 1; i++)
+					y += x[i];
+			else
+				for (int i = 0; i < j; i++)
+					y += x[i];
+			if (L == 1)
+				buildTreeExpression(t_tree->left_node, y);
+			else
+				buildTreeExpression(t_tree->right_node, y);
+			y = "";
+			if (x[j + 1] == '(' && x.back() == ')')
+				for (int i = j + 2; i < l - 1; i++)
+					y += x[i];
+			else
+				for (int i = j + 1; i < l; i++)
+					y += x[i];
+			if (L == 1)
+				buildTreeExpression(t_tree->left_node, y);
+			else
+				buildTreeExpression(t_tree->right_node, y);
+		}
 	}
 }
 
