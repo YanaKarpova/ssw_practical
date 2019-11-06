@@ -527,21 +527,7 @@ void Syntax::updateVarTypes(const std::list<std::string>& t_var_list,
 	}
 }
 
-void Syntax::buildVarTree(const std::list<std::string>& t_var_list, Tree* t_tree, std::map<std::string, Variable> id_map)
-{
-	try {
-		auto i = 0;
-		for (auto& el : t_var_list) {
-			Tree* tmp_tree = t_tree->createNode(el);
-			tmp_tree->right_node = t_tree->buildTreeStub(tmp_tree, id_map.at(el).type);
-			t_tree->createVarTree(t_tree, tmp_tree, i++);
-		}
-	}
-	catch (const std::exception & exp) {
-		std::cerr << "<E> Syntax: Catch exception in " << __func__ << ": "
-			<< exp.what() << std::endl;
-	}
-}
+
 
 void Syntax::buildTreeExpression(Tree* t_tree, std::string x) //Build subtree of arithmetic expressions
 {
