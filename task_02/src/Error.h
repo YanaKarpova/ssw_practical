@@ -6,7 +6,6 @@
 
 struct Errors 
 {
-public:
 	void printError(errors t_err, Lexem lex);
 	void printError(errors t_err);
 };
