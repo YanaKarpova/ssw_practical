@@ -31,7 +31,7 @@ std::vector<Lexem> Lexer::ScanCode()
 {
     try {
         if (!code.is_open()) {
-			Error.printError2(FILE_OPEN_ERR);
+			Error.printError(FILE_OPEN_ERR);
             //std::cerr << "<E> Can't open file" << std::endl; 
             return lex_table;
         }
@@ -112,7 +112,7 @@ Lexem Lexer::getLex()
 				case '(': tok = opb_tk;    break;
 				case ')': tok = cpb_tk;    break;
                 default: {
-					Error.printError2(UNKNOWN_TK);
+					Error.printError(UNKNOWN_TK);
                     //std::cerr << "<E> Unknown token " << ch << std::endl;
                     tok = unknown_tk;
                     break;
@@ -132,7 +132,7 @@ Lexem Lexer::getLex()
             getChar(); // some kind of k o s t y l; here we look on \n
             return Lexem(std::move(lex), tok, line);
         } else {
-			Error.printError2(UNKNOWN_TK);
+			Error.printError(UNKNOWN_TK);
            // std::cerr << "<E> Unknown token " << ch << std::endl;
         }
 
@@ -152,7 +152,7 @@ Lexem Lexer::getLex()
 char Lexer::getChar() 
 {
     if (code.fail()) {
-		Error.printError2(FILE_FIlE_ERR);
+		Error.printError(FILE_FIlE_ERR);
         /*std::cerr << "<E> Can't read from the file" << std::endl;
         throw std::runtime_error("File doesn't available");
 		*/
@@ -161,7 +161,7 @@ char Lexer::getChar()
     if (!code.eof()) {
         code >> std::noskipws >> cursor;
     } else {
-		Error.printError2(EOF_ERR);
+		Error.printError(EOF_ERR);
         /*std::cerr << "<E> File is EOF early" << std::endl;
         throw std::runtime_error("File is EOF early");
 		*/
