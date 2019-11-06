@@ -551,11 +551,7 @@ void Syntax::buildTreeExpression(Tree* t_tree, std::string x) //Build subtree of
 				t_tree->right_node = t_tree->buildTreeStub(t_tree, x);
 		}
 		else
-		{
-			std::string y = "";
-			int op_count = 0;
-			int j = 0;
-			int L;
+		{ 
 			for (int i = 0; i < l; i++)
 
 			{
